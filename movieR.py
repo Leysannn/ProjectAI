@@ -4,12 +4,13 @@ from sklearn.metrics.pairwise import linear_kernel
 from ast import literal_eval
 import numpy as np
 
+path_elliot = '/Users/elliotmartin/Documents/KTH/Cinte/ID1214/Project/ProjectAI/archive/'
+
 #Load Movies Metadata
-metadata = pd.read_csv('/Users/mac/Documents/GitHub/CBMRS/archive/movies_metadata.csv', low_memory=False)
+metadata = pd.read_csv('/Users/elliotmartin/Documents/KTH/Cinte/ID1214/Project/ProjectAI/archive/movies_metadata.csv', low_memory=False)
 #Load credits
-credits = pd.read_csv('/Users/mac/Documents/GitHub/CBMRS/archive/credits.csv')
-#Load keywords
-keywords = pd.read_csv('/Users/mac/Documents/GitHub/CBMRS/archive/keywords.csv')
+credits = pd.read_csv('/Users/elliotmartin/Documents/KTH/Cinte/ID1214/Project/ProjectAI/archive/credits.csv')
+
 
 #Drop the rows containing bad IDs
 metadata = metadata.drop([19730, 29503, 35587])
@@ -17,14 +18,14 @@ metadata = metadata.drop([19730, 29503, 35587])
 #Convert IDs to int. Required for later merging
 metadata['id'] = metadata['id'].astype('int')
 credits['id'] = credits['id'].astype('int')
-keywords['id'] = keywords['id'].astype('int')
+
 
 #Now we merge credits & keywords into our main dataframe metadata
 metadata = metadata.merge(credits, on='id')
-metadata = metadata.merge(keywords, on='id')
+
 
 #Convert our data into usable form
-features = ['cast', 'crew', 'keywords', 'genres']
+features = ['cast', 'crew', 'genres']
 for feature in features:
     metadata[feature] = metadata[feature].apply(literal_eval)
 
@@ -38,9 +39,37 @@ def get_director(x):
 
 
 #Return top 3 elements or the whole list
-def get_list(x):
-    if isinstance(x, list):
+def get_top_actors(x):
+    try:
+        names = [i['name'] for i in x]
 
+        if len(names) > 3:
+            names = names[:3]
+        return names
+
+    except: 
+        return []
+
+
+def get_top_genres(x):
+    try:
+        names = [i['name'] for i in x]
+
+        if len(names) > 3:
+            names = names[:3]
+        return names
+
+    except: 
+        return [] 
+
+
+metadata['director'] = metadata['crew'].apply(get_director)
+metadata['cast'] = metadata['cast'].apply(get_top_actors)
+metadata['genres'] = metadata['genres'].apply(get_top_genres)
+
+
+print(metadata[['title', 'cast', 'director', 'genres']].head(3))
+#print(metadata['director'].head(3))
 
 
 
@@ -88,5 +117,5 @@ def get_recommendations(title, cosine_sim=cosine_sim):
 
 
 
-print(get_recommendations('The Dark Knight Rises'))
+#print(get_recommendations('The Dark Knight Rises'))
 
